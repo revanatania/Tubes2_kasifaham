@@ -1,3 +1,5 @@
+// main.go — Entry point backend Tubes2 IF2211
+// Menjalankan HTTP server dengan semua route API.
 package main
 
 import (
@@ -23,6 +25,8 @@ func main() {
 	mux.HandleFunc("/api/traverse", handler.TraverseHandler)
 	mux.HandleFunc("/api/lca", handler.LCAHandler)
 
+	// CORS middleware — izinkan semua origin selama development
+	// Ubah AllowedOrigins di produksi
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},

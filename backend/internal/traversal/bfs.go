@@ -10,7 +10,6 @@ import (
 
 type StepCallback func(step models.TraversalStep)
 
-
 func BFS(
 	root *models.Node,
 	sel string,
@@ -104,7 +103,6 @@ func BFS(
 
 	return
 }
-
 
 func DFS(
 	root *models.Node,

@@ -300,6 +300,7 @@ func matchSimple(node *models.Node, s simpleSel) bool {
 			return false
 		}
 	}
+	// Cek id
 	if s.id != "" {
 		if node.Attributes["id"] != s.id {
 			return false

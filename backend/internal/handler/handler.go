@@ -1,3 +1,4 @@
+// http handler untuk API backend, termasuk traversal dengan SSE streaming dan LCA query.
 package handler
 
 import (
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	domCache   *domCacheEntry
+	domCache   *domCacheEntry // simpan hasil parse DOM terakhir untuk LCA query
 	domCacheMu sync.RWMutex
 )
 
@@ -31,6 +32,7 @@ func HealthHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
+// endpoint mirip dengan /api/traverse tapi tanpa traversal, parse HTML dan return DOM tree.
 func ParseHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -55,6 +57,7 @@ func ParseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Simpan ke cache untuk LCA
 	lcaTable := traversal.BuildLCA(allNodes)
 	domCacheMu.Lock()
 	domCache = &domCacheEntry{root: root, allNodes: allNodes, lcaTable: lcaTable}
@@ -87,12 +90,14 @@ func TraverseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// parse request body
 	var req models.TraverseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		sendSSEEvent(w, flusher, "error", "invalid request: "+err.Error())
 		return
 	}
 
+	// validasi input
 	req.Algorithm = strings.ToUpper(strings.TrimSpace(req.Algorithm))
 	if req.Algorithm != "BFS" && req.Algorithm != "DFS" {
 		sendSSEEvent(w, flusher, "error", "algorithm harus BFS atau DFS")
@@ -103,18 +108,21 @@ func TraverseHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ambil HTML dari rawHtml atau URL
 	rawHTML, err := resolveHTML(req)
 	if err != nil {
 		sendSSEEvent(w, flusher, "error", err.Error())
 		return
 	}
 
+	// parse HTML menjadi DOM tree
 	root, allNodes, err := parser.Parse(rawHTML)
 	if err != nil || root == nil {
 		sendSSEEvent(w, flusher, "error", "gagal parse HTML: "+safeErr(err))
 		return
 	}
 
+	// Simpan ke cache untuk /api/lca
 	lcaTable := traversal.BuildLCA(allNodes)
 	domCacheMu.Lock()
 	domCache = &domCacheEntry{root: root, allNodes: allNodes, lcaTable: lcaTable}
@@ -122,12 +130,14 @@ func TraverseHandler(w http.ResponseWriter, r *http.Request) {
 
 	maxDepth := parser.MaxDepth(root)
 
+	// Kirim DOM tree ke frontend dulu agar bisa dirender
 	sendSSEEvent(w, flusher, "tree", map[string]interface{}{
 		"tree":      root,
 		"nodeCount": len(allNodes),
 		"maxDepth":  maxDepth,
 	})
 
+	// mulai traversal dan stream setiap step
 	start := time.Now()
 
 	var sseMu sync.Mutex
@@ -162,6 +172,7 @@ func TraverseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sendSSEEvent(w, flusher, "result", result)
 
+	// stream selesai
 	fmt.Fprintf(w, "event: done\ndata: {}\n\n")
 	flusher.Flush()
 }

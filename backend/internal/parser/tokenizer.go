@@ -48,7 +48,6 @@ func tokenize(rawHTML string) []token {
 		}
 		tagContent := rawHTML[i+1 : end] 
 		i = end + 1
-
 		if strings.HasPrefix(tagContent, "!--") {
 			tokens = append(tokens, token{typ: tokenComment})
 			continue

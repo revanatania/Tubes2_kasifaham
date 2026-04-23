@@ -25,7 +25,6 @@ func Parse(rawHTML string) (root *models.Node, allNodes []*models.Node, err erro
 
 	virtualRoot := &models.Node{ID: -1, Tag: "__root__"}
 	stack := []*models.Node{virtualRoot}
-
 	childCount := map[*models.Node]int{}
 
 	for _, tok := range tokens {
@@ -110,7 +109,6 @@ func Parse(rawHTML string) (root *models.Node, allNodes []*models.Node, err erro
 
 	return root, nodes, nil
 }
-
 func fixTree(node *models.Node, parent *models.Node, depth int) {
 	if node == nil {
 		return
