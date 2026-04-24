@@ -33,25 +33,39 @@ function getNodeKind(node) {
   if (node.tag === '#text') return 'text'
   return 'element'
 }
+
 function getNodeTypeLabel(node) {
   if (node.tag === '#text') return 'Text:'
-  if (node.depth === 0)     return 'Root element:'
+  if (node.depth === 0) return 'Root element:'
   return 'Element:'
 }
+
 function getNodeContent(node) {
   if (node.tag === '#text') {
-    const t = (node.textContent || '').slice(0, 18)
-    return `"${t}${(node.textContent || '').length > 18 ? '…' : ''}"`
+    const text = node.textContent || ''
+    const t = text.slice(0, 18)
+    return `"${t}${text.length > 18 ? '...' : ''}"`
   }
   return `<${node.tag}>`
 }
 
-export function treeToFlow(root, visitedIds = [], matchedIds = [], selectedNodes = [], lcaNodeId = null) {
-  if (!root) return { nodes: [], edges: [] }
+function resolveColorKey(node, visitedSet, matchedSet, selectedSet, lcaNodeId) {
+  const kind = getNodeKind(node)
+  const isMatched = matchedSet.has(node.id)
+  const isVisited = visitedSet.has(node.id)
+  const isSelected = selectedSet.has(node.id)
+  const isLCA = node.id === lcaNodeId
 
-  const visitedSet  = new Set(visitedIds)
-  const matchedSet  = new Set(matchedIds)
-  const selectedSet = new Set(selectedNodes)
+  let colorKey = kind === 'text' ? 'text' : 'default'
+  if (isLCA) colorKey = 'lca'
+  else if (isSelected) colorKey = 'selected'
+  else if (isMatched) colorKey = 'matched'
+  else if (isVisited && kind !== 'text') colorKey = 'visited'
+  return colorKey
+}
+
+export function buildFlowSkeleton(root) {
+  if (!root) return { nodes: [], edges: [] }
 
   const rfNodes = []
   const rfEdges = []
@@ -59,26 +73,14 @@ export function treeToFlow(root, visitedIds = [], matchedIds = [], selectedNodes
   function walk(node) {
     if (!node || node.id == null) return
 
-    const isMatched  = matchedSet.has(node.id)
-    const isVisited  = visitedSet.has(node.id)
-    const isSelected = selectedSet.has(node.id)
-    const isLCA      = node.id === lcaNodeId
-    const kind       = getNodeKind(node)
-
-    let colorKey = kind === 'text' ? 'text' : 'default'
-    if (isLCA)                         colorKey = 'lca'
-    else if (isSelected)               colorKey = 'selected'
-    else if (isMatched)                colorKey = 'matched'
-    else if (isVisited && kind !== 'text') colorKey = 'visited'
-
     rfNodes.push({
       id: String(node.id),
       type: 'domNode',
       data: {
         typeLabel: getNodeTypeLabel(node),
-        content:   getNodeContent(node),
-        colorKey,
-        nodeData:  node,
+        content: getNodeContent(node),
+        colorKey: getNodeKind(node) === 'text' ? 'text' : 'default',
+        nodeData: node,
       },
       position: { x: 0, y: 0 },
     })
@@ -90,12 +92,8 @@ export function treeToFlow(root, visitedIds = [], matchedIds = [], selectedNodes
           id: `e${node.id}-${child.id}`,
           source: String(node.id),
           target: String(child.id),
-          type: 'smoothstep',
-          style: {
-            stroke: visitedSet.has(node.id) && visitedSet.has(child.id)
-              ? '#FF8BA033' : '#1a1a1a',
-            strokeWidth: 1,
-          },
+          type: 'animatedEdge',
+          style: { stroke: '#1a1a1a', strokeWidth: 1 },
         })
         walk(child)
       }
@@ -105,6 +103,48 @@ export function treeToFlow(root, visitedIds = [], matchedIds = [], selectedNodes
   walk(root)
   if (rfNodes.length === 0) return { nodes: [], edges: [] }
   return applyDagreLayout(rfNodes, rfEdges)
+}
+
+export function applyFlowState(baseFlow, visitedIds = [], matchedIds = [], selectedNodes = [], lcaNodeId = null) {
+  if (!baseFlow || baseFlow.nodes.length === 0) return { nodes: [], edges: [] }
+
+  const visitedSet = new Set(visitedIds)
+  const matchedSet = new Set(matchedIds)
+  const selectedSet = new Set(selectedNodes)
+
+  const nodes = baseFlow.nodes.map(n => {
+    const colorKey = resolveColorKey(n.data.nodeData, visitedSet, matchedSet, selectedSet, lcaNodeId)
+    return {
+      ...n,
+      data: {
+        ...n.data,
+        colorKey,
+      },
+    }
+  })
+
+  const edges = baseFlow.edges.map(e => {
+    const sourceId = parseInt(e.source, 10)
+    const targetId = parseInt(e.target, 10)
+    const isVisitedEdge = visitedSet.has(sourceId) && visitedSet.has(targetId)
+
+    return {
+      ...e,
+      style: {
+        ...e.style,
+        stroke: isVisitedEdge ? '#FF8BA033' : '#1a1a1a',
+        strokeWidth: 1,
+      },
+    }
+  })
+
+  return { nodes, edges }
+}
+
+// Backward-compatible helper (masih dipakai jika ada import lama)
+export function treeToFlow(root, visitedIds = [], matchedIds = [], selectedNodes = [], lcaNodeId = null) {
+  const baseFlow = buildFlowSkeleton(root)
+  return applyFlowState(baseFlow, visitedIds, matchedIds, selectedNodes, lcaNodeId)
 }
 
 function applyDagreLayout(nodes, edges) {

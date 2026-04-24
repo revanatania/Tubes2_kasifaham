@@ -6,7 +6,7 @@ import ReactFlow, {
   ReactFlowProvider,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
-import { treeToFlow, NODE_COLORS } from '../utils/treeUtils'
+import { buildFlowSkeleton, NODE_COLORS } from '../utils/treeUtils'
 import { useApp } from '../context/AppContext'
 import CustomNode from './CustomNode'
 import AnimatedEdge from './AnimatedEdge'
@@ -17,10 +17,11 @@ const edgeTypes = { animatedEdge: AnimatedEdge }
 function TreeViewInner() {
   const {
     treeData,
-    visitedIds,
-    matchedIds,
     selectedNodes,
     lcaNodeId,
+    renderTick,
+    isNodeVisited,
+    isNodeMatched,
     toggleSelectedNode,
   } = useApp()
 
@@ -29,17 +30,29 @@ function TreeViewInner() {
     if (treeData) setFlowKey(prev => prev + 1)
   }, [treeData])
 
-  const { nodes, edges } = useMemo(() => {
-    const result = treeToFlow(treeData, visitedIds, matchedIds, selectedNodes, lcaNodeId)
-    return {
-      nodes: result.nodes,
-      edges: result.edges.map(e => ({ ...e, type: 'animatedEdge' })),
-    }
-  }, [treeData, visitedIds, matchedIds, selectedNodes, lcaNodeId])
+  const baseFlow = useMemo(() => {
+    return buildFlowSkeleton(treeData)
+  }, [treeData])
+
+  const { nodes, edges } = useMemo(() => baseFlow, [baseFlow])
 
   const onNodeClick = useCallback((_, node) => {
-    toggleSelectedNode(parseInt(node.id))
+    toggleSelectedNode(parseInt(node.id, 10))
   }, [toggleSelectedNode])
+
+  const getMiniMapColor = useCallback((node) => {
+    const nodeId = parseInt(node.id, 10)
+    const tag = node?.data?.nodeData?.tag
+    let colorKey = tag === '#text' ? 'text' : 'default'
+    if (nodeId === lcaNodeId) colorKey = 'lca'
+    else if (selectedNodes.includes(nodeId)) colorKey = 'selected'
+    else if (isNodeMatched(nodeId)) colorKey = 'matched'
+    else if (isNodeVisited(nodeId) && tag !== '#text') colorKey = 'visited'
+    return NODE_COLORS[colorKey]?.border ?? '#1a1a1a'
+  }, [lcaNodeId, selectedNodes, isNodeMatched, isNodeVisited])
+
+  // pakai renderTick agar minimap ikut update saat traversal berubah.
+  void renderTick
 
   if (!treeData) {
     return (
@@ -49,10 +62,10 @@ function TreeViewInner() {
         flexDirection: 'column', gap: 8,
         fontFamily: "'Share Tech Mono', monospace",
       }}>
-        <div style={{ color: '#E41F7B', fontSize: 11, opacity: 0.3 }}>
+        <div style={{ color: '#E41F7B', fontSize: 20, opacity: 0.3 }}>
           {'> '}masukkan URL atau HTML, lalu klik RUN
         </div>
-        <div style={{ color: '#FF8BA0', fontSize: 10, opacity: 0.15 }}>
+        <div style={{ color: '#FF8BA0', fontSize: 18, opacity: 0.15 }}>
           DOM tree akan muncul di sini
         </div>
       </div>
@@ -80,7 +93,7 @@ function TreeViewInner() {
         <Background color="#111" gap={24} size={1} />
         <Controls style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 4 }} />
         <MiniMap
-          nodeColor={node => NODE_COLORS[node.data?.colorKey]?.border ?? '#1a1a1a'}
+          nodeColor={getMiniMapColor}
           style={{ background: '#080808', border: '1px solid #1a1a1a' }}
           maskColor="#08080899"
         />

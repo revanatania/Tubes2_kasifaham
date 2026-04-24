@@ -35,7 +35,7 @@ function StatCard({ value, label, color }) {
 
 export default function TraversalPanel() {
   const {
-    visitedIds, matchedIds, traversalLog,
+    visitedCount, matchedCount, traversalLog,
     traversalResult, isTraversing,
   } = useApp()
 
@@ -56,8 +56,8 @@ export default function TraversalPanel() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Stat cards */}
       <div style={{ display: 'flex', gap: 6, padding: '8px 12px', borderBottom: '1px solid #111' }}>
-        <StatCard value={visitedIds.length} label="dikunjungi" color={neon.blue} />
-        <StatCard value={matchedIds.length} label="cocok"      color={neon.green} />
+        <StatCard value={visitedCount} label="dikunjungi" color={neon.blue} />
+        <StatCard value={matchedCount} label="cocok"      color={neon.green} />
         <StatCard value={timeMs}            label="waktu"      color={neon.purple} />
       </div>
 

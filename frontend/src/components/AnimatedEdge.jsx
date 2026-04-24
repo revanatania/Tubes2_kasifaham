@@ -3,14 +3,24 @@ import { useApp } from '../context/AppContext'
 import { useEffect, useRef } from 'react'
 
 export default function AnimatedEdge({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, source, target }) {
-  const { flowingEdge, glowedEdges } = useApp()
+  const {
+    animationEnabled,
+    flowingEdge,
+    renderTick,
+    isNodeVisited,
+    isEdgeGlowed,
+  } = useApp()
   const pathRef = useRef(null)
   const rafRef  = useRef(null)
 
-  const fromId    = parseInt(source)
-  const toId      = parseInt(target)
-  const isFlowing = flowingEdge?.from === fromId && flowingEdge?.to === toId
-  const isGlowed  = glowedEdges.has(`${fromId}-${toId}`)
+  const fromId    = parseInt(source, 10)
+  const toId      = parseInt(target, 10)
+  const isFlowing = animationEnabled && flowingEdge?.from === fromId && flowingEdge?.to === toId
+  const isGlowed  = isEdgeGlowed(fromId, toId)
+  const isVisitedEdge = isNodeVisited(fromId) && isNodeVisited(toId)
+
+  // gunakan renderTick agar edge merefresh status visited/glow dari lookup refs.
+  void renderTick
 
   const [edgePath] = getSmoothStepPath({
     sourceX, sourceY, targetX, targetY,
@@ -18,7 +28,7 @@ export default function AnimatedEdge({ sourceX, sourceY, targetX, targetY, sourc
   })
 
   useEffect(() => {
-    if (!isFlowing || !pathRef.current) return
+    if (!animationEnabled || !isFlowing || !pathRef.current) return
 
     const el = pathRef.current
     let len = 200
@@ -44,15 +54,16 @@ export default function AnimatedEdge({ sourceX, sourceY, targetX, targetY, sourc
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [isFlowing, flowingEdge])
+  }, [animationEnabled, isFlowing, flowingEdge])
 
   const lit = isFlowing || isGlowed
+  const showOverlay = animationEnabled && lit
 
   return (
     <>
       <BaseEdge path={edgePath} style={{
-        stroke: lit ? '#FF8BA0' : '#222',
-        strokeWidth: lit ? 2 : 1.5,
+        stroke: lit ? '#FF8BA0' : (isVisitedEdge ? '#FF8BA033' : '#222'),
+        strokeWidth: lit ? 2 : (isVisitedEdge ? 1.8 : 1.5),
         transition: 'stroke 0.3s, stroke-width 0.3s',
       }} />
       <path
@@ -63,7 +74,7 @@ export default function AnimatedEdge({ sourceX, sourceY, targetX, targetY, sourc
         strokeWidth="3"
         strokeLinecap="round"
         style={{
-          display: lit ? 'block' : 'none',
+          display: showOverlay ? 'block' : 'none',
           strokeDasharray: isGlowed && !isFlowing ? 'none' : undefined,
           strokeDashoffset: isGlowed && !isFlowing ? 0 : undefined,
           opacity: isFlowing ? 1 : 0.5,

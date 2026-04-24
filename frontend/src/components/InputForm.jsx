@@ -46,6 +46,7 @@ const S = {
 export default function InputForm() {
   const {
     setTreeData, setNodeCount, setMaxDepth,
+    animationEnabled, setAnimationEnabled,
     setIsTraversing, isTraversing,
     resetTraversal, addVisitedNode,
     setTraversalResult, setError,
@@ -191,6 +192,43 @@ export default function InputForm() {
               >+</button>
             </div>
           )}
+        </div>
+      </div>
+
+      <div>
+        <span style={S.label}>animasi traversal</span>
+        <div style={S.toggle}>
+          <button
+            disabled={isTraversing}
+            style={{
+              ...S.toggleBtn(animationEnabled),
+              opacity: isTraversing ? 0.6 : 1,
+              cursor: isTraversing ? 'not-allowed' : 'pointer',
+            }}
+            onClick={() => setAnimationEnabled(true)}
+          >
+            ON
+          </button>
+          <button
+            disabled={isTraversing}
+            style={{
+              ...S.toggleBtn(!animationEnabled),
+              opacity: isTraversing ? 0.6 : 1,
+              cursor: isTraversing ? 'not-allowed' : 'pointer',
+            }}
+            onClick={() => setAnimationEnabled(false)}
+          >
+            OFF
+          </button>
+        </div>
+        <div style={{
+          marginTop: 4,
+          fontSize: 9,
+          color: '#666',
+          fontFamily: "'Share Tech Mono', monospace",
+          letterSpacing: '0.04em',
+          lineHeight: 1.4,
+        }}>
         </div>
       </div>
 

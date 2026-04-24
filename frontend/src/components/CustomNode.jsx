@@ -3,9 +3,33 @@ import { NODE_COLORS } from '../utils/treeUtils'
 import { useApp } from '../context/AppContext'
 
 export default function CustomNode({ data, id }) {
-  const { activeNodeId } = useApp()
-  const { typeLabel, content, colorKey } = data
-  const isActive = activeNodeId === parseInt(id)
+  const {
+    animationEnabled,
+    activeNodeId,
+    selectedNodes,
+    lcaNodeId,
+    renderTick,
+    isNodeVisited,
+    isNodeMatched,
+  } = useApp()
+  const { typeLabel, content, nodeData } = data
+
+  const nodeId = parseInt(id, 10)
+  const isActive = animationEnabled && activeNodeId === nodeId
+  const isSelected = selectedNodes.includes(nodeId)
+  const isLCA = lcaNodeId === nodeId
+  const isMatched = isNodeMatched(nodeId)
+  const isVisited = isNodeVisited(nodeId)
+  const isText = nodeData?.tag === '#text'
+
+  // gunakan renderTick agar node merefresh state visual traversal dari lookup refs.
+  void renderTick
+
+  let colorKey = isText ? 'text' : 'default'
+  if (isLCA) colorKey = 'lca'
+  else if (isSelected) colorKey = 'selected'
+  else if (isMatched) colorKey = 'matched'
+  else if (isVisited && !isText) colorKey = 'visited'
 
   const effectiveKey = isActive
     ? (colorKey === 'matched' ? 'matched' : 'visited')
