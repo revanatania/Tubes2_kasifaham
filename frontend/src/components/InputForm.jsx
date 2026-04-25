@@ -4,7 +4,7 @@ import { traverseSSE } from '../api/client'
 
 const S = {
   label: {
-    fontSize: 10, color: '#555', letterSpacing: '0.12em',
+    fontSize: 10, color: '#777', letterSpacing: '0.12em',
     textTransform: 'uppercase', fontFamily: "'Share Tech Mono', monospace",
     marginBottom: 4, display: 'block',
   },
@@ -53,10 +53,10 @@ export default function InputForm() {
   } = useApp()
 
   const [mode, setMode]           = useState('url')
-  const [url, setUrl]             = useState('https://example.com')
+  const [url, setUrl]             = useState('')
   const [html, setHtml]           = useState('')
   const [algo, setAlgo]           = useState('BFS')
-  const [selector, setSelector]   = useState('p')
+  const [selector, setSelector]   = useState('')
   const [limitMode, setLimitMode] = useState('all')
   const [topN, setTopN]           = useState(5)
 
@@ -112,7 +112,7 @@ export default function InputForm() {
           style={S.input}
           value={url}
           onChange={e => setUrl(e.target.value)}
-          placeholder="https://example.com"
+          placeholder=""
           spellCheck={false}
         />
       ) : (
@@ -120,7 +120,7 @@ export default function InputForm() {
           style={S.textarea}
           value={html}
           onChange={e => setHtml(e.target.value)}
-          placeholder="<html>...</html>"
+          placeholder=""
           spellCheck={false}
         />
       )}

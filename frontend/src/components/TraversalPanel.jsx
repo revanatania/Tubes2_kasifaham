@@ -74,8 +74,8 @@ export default function TraversalPanel() {
         }}
       >
         {traversalLog.length === 0 ? (
-          <div style={{ color: '#222', fontSize: 10, paddingTop: 4 }}>
-            log kosong — jalankan traversal dulu
+          <div style={{ color: '#333', fontSize: 10, paddingTop: 4 }}>
+            log kosong
           </div>
         ) : (
           traversalLog.filter(step => step.tag !== '#text').map((step, i) => {

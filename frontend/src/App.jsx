@@ -55,9 +55,9 @@ export default function App() {
             color: '#E41F7B',
             letterSpacing: '0.08em',
             textShadow: '0 0 10px #E41F7B66',
-          }}>DOM TREE TRAVERSAL</div>
+          }}>KASIFAHAM</div>
           <div style={{
-            fontSize: 9, color: '#666',
+            fontSize: 9, color: '#777',
             fontFamily: "'Share Tech Mono', monospace",
             marginTop: 2, letterSpacing: '0.1em',
           }}>BFS / DFS / LCA</div>
@@ -181,12 +181,12 @@ export default function App() {
         ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
         * { box-sizing: border-box; }
         .react-flow__controls button {
-          background: #0d0d0d !important;
-          border: 1px solid #1a1a1a !important;
+          background: #1a1a1a !important;
+          border: 1px solid #222 !important;
           color: #444 !important;
         }
         .react-flow__controls button:hover {
-          background: #1a1a1a !important;
+          background: #222 !important;
           color: #E41F7B !important;
         }
         .react-flow__attribution { display: none; }
