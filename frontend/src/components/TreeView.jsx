@@ -43,15 +43,19 @@ function TreeViewInner() {
   const getMiniMapColor = useCallback((node) => {
     const nodeId = parseInt(node.id, 10)
     const tag = node?.data?.nodeData?.tag
-    let colorKey = tag === '#text' ? 'text' : 'default'
+    const parentId = node?.data?.parentId
+    const isText = tag === '#text'
+
+    let colorKey = isText ? 'text' : 'default'
     if (nodeId === lcaNodeId) colorKey = 'lca'
     else if (selectedNodes.includes(nodeId)) colorKey = 'selected'
     else if (isNodeMatched(nodeId)) colorKey = 'matched'
-    else if (isNodeVisited(nodeId) && tag !== '#text') colorKey = 'visited'
+    else if (isNodeVisited(nodeId) && !isText) colorKey = 'visited'
+    else if (isText && parentId != null && isNodeMatched(parentId)) colorKey = 'textAffected'
+
     return NODE_COLORS[colorKey]?.border ?? '#1a1a1a'
   }, [lcaNodeId, selectedNodes, isNodeMatched, isNodeVisited])
 
-  // pakai renderTick agar minimap ikut update saat traversal berubah.
   void renderTick
 
   if (!treeData) {
@@ -91,7 +95,11 @@ function TreeViewInner() {
         elementsSelectable={false}
       >
         <Background color="#111" gap={24} size={1} />
-        <Controls style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 4 }} />
+        <Controls
+          showFitView={false}
+          showInteractive={false}
+          style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 4 }}
+        />
         <MiniMap
           nodeColor={getMiniMapColor}
           style={{ background: '#080808', border: '1px solid #1a1a1a' }}

@@ -12,7 +12,7 @@ export default function CustomNode({ data, id }) {
     isNodeVisited,
     isNodeMatched,
   } = useApp()
-  const { typeLabel, content, nodeData } = data
+  const { typeLabel, content, nodeData, parentId } = data
 
   const nodeId = parseInt(id, 10)
   const isActive = animationEnabled && activeNodeId === nodeId
@@ -21,8 +21,8 @@ export default function CustomNode({ data, id }) {
   const isMatched = isNodeMatched(nodeId)
   const isVisited = isNodeVisited(nodeId)
   const isText = nodeData?.tag === '#text'
+  const parentIsMatched = parentId != null && isNodeMatched(parentId)
 
-  // gunakan renderTick agar node merefresh state visual traversal dari lookup refs.
   void renderTick
 
   let colorKey = isText ? 'text' : 'default'
@@ -30,6 +30,7 @@ export default function CustomNode({ data, id }) {
   else if (isSelected) colorKey = 'selected'
   else if (isMatched) colorKey = 'matched'
   else if (isVisited && !isText) colorKey = 'visited'
+  else if (isText && parentIsMatched) colorKey = 'textAffected'
 
   const effectiveKey = isActive
     ? (colorKey === 'matched' ? 'matched' : 'visited')
@@ -46,7 +47,6 @@ export default function CustomNode({ data, id }) {
       <Handle type="target" position={Position.Top}
         style={{ background: c.border, width: 6, height: 6, border: 'none' }} />
 
-      {/* Inner: visual node yang bisa scale tanpa menggeser edge */}
       <div style={{
         position: 'absolute',
         inset: 0,
@@ -59,7 +59,7 @@ export default function CustomNode({ data, id }) {
         justifyContent: 'center',
         gap: 2,
         padding: '4px 8px',
-        boxShadow: effectiveKey !== 'default' ? `0 0 12px ${c.border}66` : 'none',
+        boxShadow: effectiveKey !== 'default' && effectiveKey !== 'text' ? `0 0 12px ${c.border}66` : 'none',
         transform: isActive ? 'scale(1.28)' : 'scale(1)',
         transition: isActive
           ? 'transform 0.14s ease-out, box-shadow 0.1s'
@@ -83,7 +83,7 @@ export default function CustomNode({ data, id }) {
           color: c.text,
           fontWeight: 500,
           lineHeight: 1,
-          textShadow: effectiveKey !== 'default' ? `0 0 6px ${c.border}88` : 'none',
+          textShadow: effectiveKey !== 'default' && effectiveKey !== 'text' ? `0 0 6px ${c.border}88` : 'none',
           maxWidth: 118,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
