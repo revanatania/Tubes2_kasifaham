@@ -143,19 +143,19 @@ Tubes2_NamaKelompok/
 │       ├── models/
 │       │   └── models.go
 │       ├── parser/
-│       │   ├── parser.go        # Tree builder (tanpa library eksternal)
-│       │   ├── tokenizer.go     # HTML tokenizer (tanpa library eksternal)
-│       │   ├── selector.go      # CSS selector engine
+│       │   ├── parser.go       
+│       │   ├── tokenizer.go     
+│       │   ├── selector.go     
 │       │   └── parser_test.go
 │       ├── traversal/
-│       │   ├── bfs_dfs.go       # BFS & DFS + multithreading
-│       │   ├── lca.go           # LCA Binary Lifting
+│       │   ├── bfs_dfs.go      
+│       │   ├── lca.go          
 │       │   ├── traversal_test.go
 │       │   └── lca_test.go
 │       ├── scraper/
 │       │   └── scraper.go
 │       └── handler/
-│           └── handler.go       # HTTP handlers + SSE
+│           └── handler.go       
 └── frontend/
     ├── Dockerfile
     ├── nginx.conf
