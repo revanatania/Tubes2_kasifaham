@@ -176,8 +176,7 @@ Tubes2_NamaKelompok/
 
 | Nama | NIM |
 |------|-----|
-| ... | ... |
-| ... | ... |
-| ... | ... |
+| Gabriella Botimada Lubis | 13524006 |
+| Reva Natania Sitohang | 13524098 |
 
 ---
